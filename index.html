@@ -31,12 +31,11 @@
     </div>
 
     <script>
-        // ── КОНФИГУРАЦИЯ SUPABASE (ВСТАВЬТЕ СВОИ ДАННЫЕ СЮДА) ────────────────
-        const SUPABASE_URL = "https://xlgctttisnjywnhlmimx.supabase.co";
+        // ── КОНФИГУРАЦИЯ SUPABASE ───────────────────────────────────────────
+        const SUPABASE_URL = "https://xlgctttisnjywnhlmimx.supabase.co"; 
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsZ2N0dHRpc25qeXduaGxtaW14Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxMDg0NjEsImV4cCI6MjA5OTY4NDQ2MX0.KfnFGrdGWkbyPdODQuIFxV8eacYXjsUwNSv4gKMY48M";
         const BUCKET_NAME = "temp_photos";
 
-        // Получаем код сессии из адресной строки (например, ?session=582109)
         const urlParams = new URLSearchParams(window.location.search);
         const sessionId = urlParams.get('session');
 
@@ -65,8 +64,6 @@
             const uploadUrl = `${SUPABASE_URL}/storage/v1/object/${BUCKET_NAME}/${sessionId}.jpg`;
 
             try {
-                // ВАЖНО: Читаем файл в ArrayBuffer.
-                // Это решает проблему блокировки запросов на смартфонах (особенно на iOS/Safari).
                 const arrayBuffer = await file.arrayBuffer();
 
                 const response = await fetch(uploadUrl, {
@@ -76,7 +73,7 @@
                         'apikey': SUPABASE_KEY,
                         'Content-Type': file.type || 'image/jpeg'
                     },
-                    body: arrayBuffer // Передаем безопасный буфер вместо сырого файла
+                    body: arrayBuffer
                 });
 
                 if (response.ok) {
