@@ -130,27 +130,48 @@
                 statusDiv.innerText = "⏳ Отправка в облако...";
                 const arrayBuffer = await fileToArrayBuffer(compressedBlob);
 
-                const response = await fetch(uploadUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${SUPABASE_KEY}`,
-                        'apikey': SUPABASE_KEY,
-                        'Content-Type': 'image/jpeg'
-                    },
-                    body: arrayBuffer
-                });
-
-                if (response.ok) {
-                    statusDiv.innerText = "✅ Успешно отправлено!";
-                    statusDiv.style.color = "#10b981";
-                    document.getElementById('submit').style.display = 'none';
-                    document.getElementById('filename').innerText = "";
-                } else {
-                    const errData = await response.json();
-                    statusDiv.innerText = "❌ Ошибка: " + (errData.message || "Не удалось отправить");
+                // ИСПОЛЬЗУЕМ XHR ВМЕСТО FETCH ДЛЯ СТАБИЛЬНОСТИ НА iOS/ANDROID
+                const xhr = new XMLHttpRequest();
+                xhr.open("POST", uploadUrl, true);
+                
+                // Устанавливаем заголовки
+                xhr.setRequestHeader("Authorization", `Bearer ${SUPABASE_KEY}`);
+                xhr.setRequestHeader("apikey", SUPABASE_KEY);
+                xhr.setRequestHeader("Content-Type", "image/jpeg");
+                
+                xhr.onload = () => {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        statusDiv.innerText = "✅ Успешно отправлено!";
+                        statusDiv.style.color = "#10b981";
+                        document.getElementById('submit').style.display = 'none';
+                        document.getElementById('filename').innerText = "";
+                    } else {
+                        let errMessage = "Ошибка сервера";
+                        try {
+                            const errData = JSON.parse(xhr.responseText);
+                            errMessage = errData.message || errMessage;
+                        } catch(e) {}
+                        statusDiv.innerText = "❌ Ошибка: " + errMessage;
+                        statusDiv.style.color = "#ef4444";
+                        document.getElementById('submit').disabled = false;
+                    }
+                };
+                
+                xhr.onerror = () => {
+                    statusDiv.innerText = "❌ Сбой сети при отправке";
                     statusDiv.style.color = "#ef4444";
                     document.getElementById('submit').disabled = false;
-                }
+                };
+
+                xhr.ontimeout = () => {
+                    statusDiv.innerText = "❌ Превышено время ожидания";
+                    statusDiv.style.color = "#ef4444";
+                    document.getElementById('submit').disabled = false;
+                };
+
+                xhr.timeout = 20000; // Таймаут 20 секунд
+                xhr.send(arrayBuffer);
+
             } catch (err) {
                 statusDiv.innerText = "❌ Сбой: " + err.message;
                 statusDiv.style.color = "#ef4444";
