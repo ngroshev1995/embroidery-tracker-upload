@@ -132,7 +132,7 @@
 
                 // ИСПОЛЬЗУЕМ XHR ВМЕСТО FETCH ДЛЯ СТАБИЛЬНОСТИ НА iOS/ANDROID
                 const xhr = new XMLHttpRequest();
-                xhr.open("POST", uploadUrl, true);
+                xhr.open("PUT", uploadUrl, true);
                 
                 // Устанавливаем заголовки
                 xhr.setRequestHeader("Authorization", `Bearer ${SUPABASE_KEY}`);
