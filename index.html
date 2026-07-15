@@ -50,7 +50,9 @@
 
         function fileSelected(input) {
             if (input.files && input.files[0]) {
-                document.getElementById('filename').innerText = "Выбрано"; // Никакого мусора
+                // Выводим статус вместе с оригинальным именем файла
+                document.getElementById('filename').innerText = "Выбрано: " + input.files[0].name;
+                
                 const submitBtn = document.getElementById('submit');
                 submitBtn.style.display = 'block';
                 submitBtn.disabled = false;
