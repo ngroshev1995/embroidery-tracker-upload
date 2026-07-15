@@ -20,9 +20,9 @@
 <body>
     <div class="card">
         <h2>📷 Отправить фото процесса</h2>
-        <p>Сделайте снимок вышивки, чтобы мгновенно передать его в программу на компьютере.</p>
+        <p>Добавьте эту страницу в закладки телефона, чтобы загружать фото в этот проект без сканирования QR-кода.</p>
         
-        <label for="file" class="btn-choose">📸 Выбрать следующее фото</label>
+        <label for="file" class="btn-choose">📸 Выбрать фото</label>
         <input type="file" id="file" accept="image/*" onchange="fileSelected(this)">
         <div id="filename"></div>
         <button id="submit" class="btn-submit" onclick="uploadPhoto()">🚀 Отправить в Трекер</button>
@@ -45,19 +45,15 @@
         const BUCKET_NAME = "temp_photos";
 
         const urlParams = new URLSearchParams(window.location.search);
-        const sessionId = urlParams.get('session');
-
-        // Глобальный счетчик отправленных фотографий в рамках одной сессии
-        let photoIndex = 0;
+        // Считываем ID проекта из ссылки (?project=29)
+        const projectId = urlParams.get('project');
 
         function fileSelected(input) {
             if (input.files && input.files[0]) {
-                document.getElementById('filename').innerText = "Выбран файл: " + input.files[0].name;
-                
+                document.getElementById('filename').innerText = "Выбрано"; // Никакого мусора
                 const submitBtn = document.getElementById('submit');
                 submitBtn.style.display = 'block';
                 submitBtn.disabled = false;
-                
                 document.getElementById('status').innerText = "";
             }
         }
@@ -111,8 +107,8 @@
         }
 
         async function uploadPhoto() {
-            if (!sessionId) {
-                alert("Ошибка: Отсутствует код сессии!");
+            if (!projectId) {
+                alert("Ошибка: Отсутствует ID проекта в ссылке!");
                 return;
             }
 
@@ -121,17 +117,18 @@
             if (!file) return;
 
             const statusDiv = document.getElementById('status');
-            statusDiv.innerText = "⏳ Оптимизация снимка...";
+            statusDiv.innerText = "⏳ Сжатие...";
             statusDiv.style.color = "#3b82f6";
             document.getElementById('submit').disabled = true;
 
-            // Формируем имя файла с суффиксом индекса (_0, _1, _2...)
-            const uploadUrl = `${SUPABASE_URL}/storage/v1/object/${BUCKET_NAME}/${sessionId}_${photoIndex}.jpg`;
+            // Формируем имя файла по штампу времени (Date.now())
+            const timestamp = Date.now();
+            const uploadUrl = `${SUPABASE_URL}/storage/v1/object/${BUCKET_NAME}/project_${projectId}_${timestamp}.jpg`;
 
             try {
                 const compressedBlob = await compressImage(file, 1200, 1200, 0.75);
 
-                statusDiv.innerText = "⏳ Отправка в облако...";
+                statusDiv.innerText = "⏳ Отправка...";
                 const arrayBuffer = await fileToArrayBuffer(compressedBlob);
 
                 const xhr = new XMLHttpRequest();
@@ -143,15 +140,10 @@
                 
                 xhr.onload = () => {
                     if (xhr.status >= 200 && xhr.status < 300) {
-                        statusDiv.innerText = `✅ Фото №${photoIndex + 1} успешно отправлено!`;
+                        statusDiv.innerText = "✅ Отправлено!";
                         statusDiv.style.color = "#10b981";
-                        
-                        // Увеличиваем индекс для следующего кадра!
-                        photoIndex++;
-                        
-                        // Скрываем кнопку отправки до выбора следующего файла
                         document.getElementById('submit').style.display = 'none';
-                        document.getElementById('filename').innerText = "Готов к выбору следующего фото.";
+                        document.getElementById('filename').innerText = "Всё";
                     } else {
                         let errMessage = "Ошибка сервера";
                         try {
