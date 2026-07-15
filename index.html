@@ -53,7 +53,11 @@
         function fileSelected(input) {
             if (input.files && input.files[0]) {
                 document.getElementById('filename').innerText = "Выбран файл: " + input.files[0].name;
-                document.getElementById('submit').style.display = 'block';
+                
+                const submitBtn = document.getElementById('submit');
+                submitBtn.style.display = 'block';
+                submitBtn.disabled = false;
+                
                 document.getElementById('status').innerText = "";
             }
         }
