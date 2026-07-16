@@ -1,4 +1,3 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -45,12 +44,12 @@
         const BUCKET_NAME = "temp_photos";
 
         const urlParams = new URLSearchParams(window.location.search);
-        // Считываем ID проекта из ссылки (?project=29)
+        // Считываем ID проекта и уникальный ID инстанса программы
         const projectId = urlParams.get('project');
+        const instanceId = urlParams.get('instance') || 'default'; // 'default' для обратной совместимости
 
         function fileSelected(input) {
             if (input.files && input.files[0]) {
-                // Выводим статус вместе с оригинальным именем файла
                 document.getElementById('filename').innerText = "Выбрано: " + input.files[0].name;
                 
                 const submitBtn = document.getElementById('submit');
@@ -123,15 +122,15 @@
             statusDiv.style.color = "#3b82f6";
             document.getElementById('submit').disabled = true;
 
-            // Формируем имя файла по штампу времени (Date.now())
-            const timestamp = Date.now();
-            const uploadUrl = `${SUPABASE_URL}/storage/v1/object/${BUCKET_NAME}/project_${projectId}_${timestamp}.jpg`;
-
             try {
                 const compressedBlob = await compressImage(file, 1200, 1200, 0.75);
 
                 statusDiv.innerText = "⏳ Отправка...";
                 const arrayBuffer = await fileToArrayBuffer(compressedBlob);
+
+                // Имя файла формируется внутри функции при отправке с учетом UUID инстанса
+                const timestamp = Date.now();
+                const uploadUrl = `${SUPABASE_URL}/storage/v1/object/${BUCKET_NAME}/instance_${instanceId}_project_${projectId}_${timestamp}.jpg`;
 
                 const xhr = new XMLHttpRequest();
                 xhr.open("PUT", uploadUrl, true);
